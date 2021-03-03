@@ -22,12 +22,19 @@ lid_clearance = 0.4
 
 key_hole_diameter = 30
 
+embossing_depth = 2
+
 --####################################################################
 
--- basic polygons "lib" import
+-- Basic polygons "lib" import
 dofile(Path .. 'poly_shapes.lua')
 
+-- Assets
+svg_logo = svg_contouring(Path .. 'logo.svg',90)
+svg_qrcode = svg_contouring(Path .. 'qrcode.svg',90)
+
 --####################################################################
+
 
 function gen_angle_chamfer(nb_faces,diameter,cutting_width,cutting_angle)
   local side = 2*(diameter/2)*sin(180/nb_faces)
@@ -47,6 +54,18 @@ lock_meat = difference{
   gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,lid_height),
   gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height)
 }
+
+icesl_logo = {}
+for _, contour in pairs(svg_logo) do
+  icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),contour:outline())
+end
+icesl_logo = rotate(-90,0,0)*scale(1.6,1.6,1)*union(icesl_logo)
+
+icesl_qrcode = {}
+for contour=2,#svg_qrcode do
+  icesl_qrcode[#icesl_qrcode+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),svg_qrcode[contour]:outline())
+end
+icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
 
 box = union{
   difference{
@@ -76,7 +95,7 @@ lid = difference{
 -- items to feed in the view
 items = union{
   box,
-  translate(0,0,box_height-lid_height)*lid
+  translate(0,0,box_height-lid_height+0)*lid
 }
---emit(items)
-emit(difference(items,translate(0,-115,0)*cube(230))) -- cross-section view
+emit(items)
+--emit(difference(items,translate(0,-115,0)*cube(230))) -- cross-section view
