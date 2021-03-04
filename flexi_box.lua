@@ -63,6 +63,8 @@ box = union{
 }
 --emit(box)
 
+--emit(place_on_all(box_nb_faces,box_diameter,1,cube(20),0),5)
+
 lid_cavity = gen_polygon(box_nb_faces,(box_diameter-box_wall_th*5),lid_height)
 
 lid = difference{
