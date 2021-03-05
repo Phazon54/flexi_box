@@ -22,6 +22,14 @@ lid_clearance = 0.4
 
 key_hole_diameter = 30
 
+-- m3 screws
+screw_diameter = 3
+screw_head_diameter = 5.5
+screw_head_height = 2
+screw_thread_diameter = 2.5
+
+screw_head_bridging = 0.2 -- layer height !
+
 embossing_depth = 2
 
 --####################################################################
@@ -61,28 +69,91 @@ box = union{
   },
   translate(0,0,box_height-lid_height)*lock_meat
 }
---emit(box)
 
---emit(place_on_all(box_nb_faces,box_diameter,1,cube(20),0),5)
-
-lid_cavity = gen_polygon(box_nb_faces,(box_diameter-box_wall_th*5),lid_height)
-
-lid = difference{
-  union{
-    gen_polygon(box_nb_faces,(box_diameter-box_wall_th*4)-lid_clearance*2,lid_height),
-    translate(0,0,lid_height)*gen_polygon(box_nb_faces,box_diameter,box_wall_th),
-  },
-  translate(0,0,box_wall_th/2)*lid_cavity,
-  cylinder(key_hole_diameter/2,lid_height+box_wall_th)
+lid_screw_holes = union{
+  place_on_all(-- screw head hole
+    box_nb_faces,
+    (box_diameter-box_wall_th*5),
+    0,
+    cylinder(screw_head_diameter/2,(screw_head_height-screw_head_bridging)),
+    -(screw_head_diameter/4)-(box_wall_th/2)
+  ), 
+  translate(0,0,screw_head_height)*place_on_all(-- screw holes 
+    box_nb_faces,
+    (box_diameter-box_wall_th*5),
+    0,
+    cylinder(screw_diameter/2,(box_wall_th-screw_head_height)),
+    -box_wall_th/2
+  ) 
 }
---emit(translate(0,0,box_height-lid_height)*lid)
+
+lid_screw_guides = difference{
+  place_on_all(
+    box_nb_faces,
+    (box_diameter-box_wall_th*5),
+    0,
+    gen_polygon(box_nb_faces,screw_diameter*3,lid_height-box_wall_th/2),
+    -screw_diameter*3
+  ),
+  place_on_all(
+    box_nb_faces,
+    (box_diameter-box_wall_th*5),
+    0,
+    cylinder(screw_diameter/2,lid_height-box_wall_th/2),
+    -(screw_head_diameter/4)-(box_wall_th/2)
+  )
+}
+
+lid_bottom = union{
+  difference{
+    gen_polygon(box_nb_faces,(box_diameter-box_wall_th*4)-lid_clearance*2,lid_height),-- body
+    translate(0,0,box_wall_th/2)*gen_polygon(box_nb_faces,(box_diameter-box_wall_th*5),lid_height), -- cavity
+    lid_screw_holes, -- screw holes
+    cylinder(key_hole_diameter/2,box_wall_th/2) -- key hole
+  },
+  translate(0,0,box_wall_th/2)*lid_screw_guides
+}
+
+lid_top = difference{
+  gen_polygon(box_nb_faces,box_diameter,box_wall_th/2),
+  cylinder(key_hole_diameter/2,lid_height+box_wall_th), -- key hole
+  place_on_all(-- screw holes 
+    box_nb_faces,
+    (box_diameter-box_wall_th*5),
+    0,
+    cylinder(screw_diameter/2,box_wall_th/3),
+    -box_wall_th/2
+  )
+}
 
 --####################################################################
 
+splitting_factor = ui_number("splitting_factor", 0, 0, 50)
+
 -- items to feed in the view
-items = union{
-  box,
-  translate(0,0,box_height-lid_height+0)*lid
+items = {
+  --{shape,v(posx,posy,posz),brush}
+  {box,v(0,0,0),0},
+  {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),2},
+  {lid_top,v(0,0,box_height+splitting_factor*1.5),3},
 }
-emit(items)
---emit(difference(items,translate(0,-115,0)*cube(230))) -- cross-section view
+
+cross_section = ui_bool("cross section view", false)
+
+for i,item in pairs(items) do
+  if cross_section then
+    cut_x = bbox(items[i][1]):extent().x
+    cut_y = bbox(items[i][1]):extent().y
+    cut_z = bbox(items[i][1]):extent().z
+    cut = cube(cut_x,cut_y,cut_z)
+    out = difference{
+      translate(items[i][2])*items[i][1], -- item
+      --translate(0,-cut_y/2,0)*cut -- cross section cut
+      translate(0,-cut_y/2,items[i][2].z)*cut -- cross section cut
+    }
+    emit(out,items[i][3])
+  else
+    out = translate(items[i][2])*items[i][1]
+    emit(out,items[i][3])
+  end
+end
