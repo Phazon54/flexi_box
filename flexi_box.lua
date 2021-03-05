@@ -135,21 +135,25 @@ items = {
   --{shape,v(posx,posy,posz),brush}
   {box,v(0,0,0),0},
   {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),2},
-  {lid_top,v(0,0,box_height+splitting_factor*1.5),3},
+  {lid_top,v(0,0,box_height+splitting_factor*3),3},
 }
 
 cross_section = ui_bool("cross section view", false)
 
+u_items = {}
+for i,item in pairs(items) do
+  u_items[i] = translate(items[i][2])*items[i][1]
+end
+u_items = union(u_items)
+
+cross_section_cut = cube(bbox(u_items):extent())
+cross_section_pos = bbox(cross_section_cut):extent().y
+
 for i,item in pairs(items) do
   if cross_section then
-    cut_x = bbox(items[i][1]):extent().x
-    cut_y = bbox(items[i][1]):extent().y
-    cut_z = bbox(items[i][1]):extent().z
-    cut = cube(cut_x,cut_y,cut_z)
     out = difference{
       translate(items[i][2])*items[i][1], -- item
-      --translate(0,-cut_y/2,0)*cut -- cross section cut
-      translate(0,-cut_y/2,items[i][2].z)*cut -- cross section cut
+      translate(0,-cross_section_pos/2,0)*cross_section_cut -- cross section cut
     }
     emit(out,items[i][3])
   else
