@@ -15,7 +15,7 @@ box_nb_faces = 6
 box_diameter = 200
 box_height = 100
 
-box_wall_th = 10
+box_wall_th = 5
 
 lid_height = 20
 lid_clearance = 0.4
@@ -45,11 +45,6 @@ svg_qrcode = svg_contouring(Path .. 'qrcode.svg',90)
 
 --####################################################################
 
-lock_meat = difference{
-  gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,lid_height),
-  gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height)
-}
-
 icesl_logo = {}
 for _, contour in pairs(svg_logo) do
   icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),contour:outline())
@@ -62,68 +57,79 @@ for contour=2,#svg_qrcode do
 end
 icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
 
-box = union{
-  difference{
-    gen_polygon(box_nb_faces,box_diameter,box_height),
-    translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,box_height)
-  },
-  translate(0,0,box_height-lid_height)*lock_meat
+-- box
+box = difference{
+  gen_polygon(box_nb_faces,box_diameter,box_height),
+  translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,box_height-lid_height-box_wall_th),
+  translate(0,0,box_height-lid_height-box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height+box_wall_th),
 }
 
-lid_screw_holes = union{
+-- lid
+screw_pos = (screw_diameter/2)+(box_wall_th/2)
+
+lid_bottom_screw_holes = union{
   place_on_all(-- screw head hole
     box_nb_faces,
     (box_diameter-box_wall_th*5),
     0,
-    cylinder(screw_head_diameter/2,(screw_head_height-screw_head_bridging)),
-    -(screw_head_diameter/4)-(box_wall_th/2)
+    cylinder(screw_head_diameter/2,screw_head_height),
+    -screw_pos-screw_head_diameter/4
   ), 
-  translate(0,0,screw_head_height)*place_on_all(-- screw holes 
+  translate(0,0,screw_head_height+screw_head_bridging)*place_on_all(-- screw holes 
     box_nb_faces,
     (box_diameter-box_wall_th*5),
     0,
-    cylinder(screw_diameter/2,(box_wall_th-screw_head_height)),
-    -box_wall_th/2
+    cylinder(screw_diameter/2,lid_height-screw_head_bridging),
+    -screw_pos
   ) 
 }
 
-lid_screw_guides = difference{
-  place_on_all(
-    box_nb_faces,
-    (box_diameter-box_wall_th*5),
-    0,
-    gen_polygon(box_nb_faces,screw_diameter*3,lid_height-box_wall_th/2),
-    -screw_diameter*3
-  ),
-  place_on_all(
-    box_nb_faces,
-    (box_diameter-box_wall_th*5),
-    0,
-    cylinder(screw_diameter/2,lid_height-box_wall_th/2),
-    -(screw_head_diameter/4)-(box_wall_th/2)
-  )
-}
+lid_top_screw_holes = place_on_all( 
+  box_nb_faces,
+  (box_diameter-box_wall_th*5),
+  0,
+  cylinder(screw_thread_diameter/2,box_wall_th/3),
+  -screw_pos+(screw_diameter/2-screw_thread_diameter/2)
+)
+
+lid_screw_guides = place_on_all(
+  box_nb_faces,
+  (box_diameter-box_wall_th*5),
+  0,
+  gen_polygon(box_nb_faces,screw_diameter*3,lid_height-box_wall_th),
+  -screw_pos-screw_diameter
+)
+
+lid_screw_guides_cut = place_on_all(
+  box_nb_faces,
+  (box_diameter-box_wall_th*5),
+  0,
+  gen_polygon(box_nb_faces,(screw_diameter*3)+lid_clearance*2,box_wall_th),
+  -screw_pos-screw_diameter-lid_clearance
+)
 
 lid_bottom = union{
   difference{
     gen_polygon(box_nb_faces,(box_diameter-box_wall_th*4)-lid_clearance*2,lid_height),-- body
-    translate(0,0,box_wall_th/2)*gen_polygon(box_nb_faces,(box_diameter-box_wall_th*5),lid_height), -- cavity
-    lid_screw_holes, -- screw holes
-    cylinder(key_hole_diameter/2,box_wall_th/2) -- key hole
+    translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,(box_diameter-box_wall_th*6)-lid_clearance*2,lid_height-box_wall_th), -- cavity    
   },
-  translate(0,0,box_wall_th/2)*lid_screw_guides
+  translate(0,0,box_wall_th)*lid_screw_guides,
+}
+
+lid_bottom = difference{
+  lid_bottom,
+  cylinder(key_hole_diameter/2,box_wall_th), -- key hole
+  lid_bottom_screw_holes, -- screw holes
 }
 
 lid_top = difference{
-  gen_polygon(box_nb_faces,box_diameter,box_wall_th/2),
-  cylinder(key_hole_diameter/2,lid_height+box_wall_th), -- key hole
-  place_on_all(-- screw holes 
-    box_nb_faces,
-    (box_diameter-box_wall_th*5),
-    0,
-    cylinder(screw_diameter/2,box_wall_th/3),
-    -box_wall_th/2
-  )
+  union{
+    gen_polygon(box_nb_faces,box_diameter,box_wall_th),
+    translate(0,0,-box_wall_th)*gen_polygon(box_nb_faces,(box_diameter-box_wall_th*6)-lid_clearance*4,box_wall_th),
+  },
+  translate(0,0,-box_wall_th)*lid_screw_guides_cut,
+  translate(0,0,-box_wall_th)*cylinder(key_hole_diameter/2,box_wall_th*2), -- key hole
+  lid_top_screw_holes, -- screw holes
 }
 
 --####################################################################
