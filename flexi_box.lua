@@ -1,5 +1,5 @@
 -- Polygonal box with flexible internal mechanism
--- Pierre Bedell 03/03/2021
+-- Pierre Bedell 07/03/2021
 
 -- Inspired by the amazing "Expanding Mechanism Lock Box"
 -- from Maker's Muse
@@ -21,6 +21,10 @@ lid_height = 20
 lid_clearance = 0.4
 
 key_hole_diameter = 30
+key_nb_faces = 6
+key_diameter = 25
+key_length = 50
+key_cross_length = 75
 
 -- m3 screws
 screw_diameter = 3
@@ -84,14 +88,22 @@ lid_corner_chamfer = place_on_all(
   -box_wall_th/2
 )
 
--- box
-box = difference{
-  gen_polygon(box_nb_faces,box_diameter,box_height),
-  translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,box_height-lid_height-box_wall_th),
-  translate(0,0,box_height-lid_height-box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height+box_wall_th),
-  translate(0,0,-box_wall_th/1.5)*box_edge_chamfer, -- edges chamfer
-  box_corner_chamfer, -- corner chamfer
-}
+-- locking pegs holes 
+box_peg_holes = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  1,
+  cube(box_side_length/4,box_wall_th*2,lid_height-box_wall_th*2),
+  -box_wall_th*2
+)
+
+lid_peg_holes = place_on_all(
+  box_nb_faces,
+  box_diameter-box_wall_th*4,
+  1,
+  cube(box_side_length/4,box_wall_th,lid_height-box_wall_th*2),
+  -box_wall_th
+)
 
 -- lid 'vents'
 lid_vents = place_on_all(
@@ -159,6 +171,7 @@ lid_bottom = difference{
   lid_bottom,
   cylinder(key_hole_diameter/2,box_wall_th), -- key hole
   lid_bottom_screw_holes, -- screw holes
+  translate(0,0,box_wall_th)*lid_peg_holes -- locking pegs holes
 }
 
 lid_top = difference{
@@ -174,6 +187,39 @@ lid_top = difference{
   translate(0,0,-box_wall_th)*lid_vents, -- lid 'vents'
 }
 
+-- box
+box = difference{
+  gen_polygon(box_nb_faces,box_diameter,box_height),
+  translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,box_height-lid_height-box_wall_th),
+  translate(0,0,box_height-lid_height-box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height+box_wall_th),
+  translate(0,0,-box_wall_th/1.5)*box_edge_chamfer, -- edges chamfer
+  box_corner_chamfer, -- corner chamfer
+  translate(0,0,box_height-box_wall_th*3)*box_peg_holes-- locking pegs holes
+}
+
+-- locking 'mechanism'
+locking_pegs = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  1,
+  cube(box_side_length/4,box_wall_th*6,(lid_height-box_wall_th*2)-lid_clearance),
+  -box_wall_th*6
+)
+
+lock = difference{
+  union{
+    cylinder((box_diameter/2)-(box_wall_th*8),(lid_height-box_wall_th*2)-lid_clearance),-- body
+    locking_pegs,
+  },
+  gen_polygon(key_nb_faces,key_diameter+lid_clearance,(lid_height-box_wall_th*2)-lid_clearance),-- keyhole
+}
+
+-- key
+key = union{
+  gen_polygon(key_nb_faces,key_diameter,key_length),
+  translate(0,0,key_length)*cube(key_cross_length,key_diameter,key_diameter/2)
+}
+
 --####################################################################
 
 splitting_factor = ui_number("splitting_factor", 0, 0, 50)
@@ -182,8 +228,10 @@ splitting_factor = ui_number("splitting_factor", 0, 0, 50)
 items = {
   --{shape,v(posx,posy,posz),brush}
   {box,v(0,0,0),0},
-  {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),2},
-  {lid_top,v(0,0,box_height+splitting_factor*3),3},
+  {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),9},
+  {lid_top,v(0,0,box_height+splitting_factor*3),2},
+  {lock,v(0,0,(box_height-lid_height+box_wall_th)+splitting_factor*2),5},
+  {key,v(0,0,(box_height-lid_height)+splitting_factor*4),7}
 }
 
 cross_section = ui_bool("cross section view", false)
