@@ -57,11 +57,40 @@ for contour=2,#svg_qrcode do
 end
 icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
 
+-- chamfers
+box_corner_chamfer = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  0,
+  cube(box_wall_th*2,box_wall_th*2,box_height),
+  -box_wall_th/2
+)
+
+box_side_length = get_polygon_side(box_nb_faces,box_diameter)
+
+box_edge_chamfer = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  1,
+  rotate(45,0,0)*cube(box_side_length,box_wall_th*2,box_wall_th*2),
+  -box_wall_th/1.5
+)
+
+lid_corner_chamfer = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  0,
+  cube(box_wall_th*2,box_wall_th*2,box_wall_th),
+  -box_wall_th/2
+)
+
 -- box
 box = difference{
   gen_polygon(box_nb_faces,box_diameter,box_height),
   translate(0,0,box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*2,box_height-lid_height-box_wall_th),
   translate(0,0,box_height-lid_height-box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height+box_wall_th),
+  translate(0,0,-box_wall_th/1.5)*box_edge_chamfer, -- edges chamfer
+  box_corner_chamfer, -- corner chamfer
 }
 
 -- lid
@@ -130,6 +159,8 @@ lid_top = difference{
   translate(0,0,-box_wall_th)*lid_screw_guides_cut,
   translate(0,0,-box_wall_th)*cylinder(key_hole_diameter/2,box_wall_th*2), -- key hole
   lid_top_screw_holes, -- screw holes
+  translate(0,0,box_wall_th/3)*box_edge_chamfer, -- edges chamfer
+  lid_corner_chamfer, -- corner chamfer
 }
 
 --####################################################################
