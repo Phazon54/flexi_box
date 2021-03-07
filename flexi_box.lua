@@ -42,8 +42,8 @@ embossing_depth = 2
 dofile(Path .. 'poly_shapes.lua')
 
 -- Assets
-svg_logo = svg_contouring(Path .. 'logo.svg',90)
-svg_qrcode = svg_contouring(Path .. 'qrcode.svg',90)
+svg_logo = svg_contouring(Path .. 'assets/logo.svg',90)
+svg_qrcode = svg_contouring(Path .. 'assets/qrcode.svg',90)
 
 --####################################################################
 
