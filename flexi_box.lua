@@ -93,6 +93,16 @@ box = difference{
   box_corner_chamfer, -- corner chamfer
 }
 
+-- lid 'vents'
+lid_vents = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  1,
+  --rotate(180,0,0)*gen_polygon(3,box_side_length-box_wall_th*7,box_wall_th*2),
+  gen_trapeze(box_side_length-box_wall_th*7, box_wall_th*2.5, box_side_length-box_wall_th*11, box_wall_th*2),
+  -box_diameter/3.1
+)
+
 -- lid
 screw_pos = (screw_diameter/2)+(box_wall_th/2)
 
@@ -161,6 +171,7 @@ lid_top = difference{
   lid_top_screw_holes, -- screw holes
   translate(0,0,box_wall_th/3)*box_edge_chamfer, -- edges chamfer
   lid_corner_chamfer, -- corner chamfer
+  translate(0,0,-box_wall_th)*lid_vents, -- lid 'vents'
 }
 
 --####################################################################
