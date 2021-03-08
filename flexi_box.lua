@@ -47,6 +47,66 @@ svg_qrcode = svg_contouring(Path .. 'assets/qrcode.svg',90)
 
 --####################################################################
 
+function setup_default()
+  --set_setting_value('infill_type_0', 'Default');
+  set_setting_value('infill_type_0', 'Gyroid');
+  set_setting_value('num_shells_0', 2);
+  set_setting_value('cover_thickness_mm_0', 2);
+  set_setting_value('print_perimeter_0', true);
+  set_setting_value('infill_percentage_0', 20);
+end
+
+function setup_phasor(lock_shape)
+  set_setting_value('infill_type_0', 'Phasor');
+  set_setting_value('num_shells_0', 0);
+  set_setting_value('cover_thickness_mm_0', 0);
+  set_setting_value('print_perimeter_0', false);
+
+  local inner_density = 0.25
+  local outer_density = 0.35
+
+  local bx = bbox(lock_shape)
+  -- Allocate the field as a 3D texture
+  local ratios = tex3d_rgb8f(64,64,64)
+  local iso = tex3d_rgb8f(64,64,64)
+  local density = tex3d_rgb8f(64,64,64)
+
+  for i = 0,63 do
+    for j = 0,63 do
+      for k = 0,63 do
+        x = i - 33
+        y = j - 33
+        z = k / 64
+        -- defining borders
+        l = (length(v(x,y))/32.0 - 1/6) / (11/12)
+        
+        -- defining an horizontal V shape for the fields
+        z = math.abs(0.5-z) * 2.0
+        l = math.abs(0.5-l) * 2.0
+        z = z * 0.5 + 0.25
+        
+        -- apply infill_isotropy & infill_percentage
+        if l>z then
+          iso:set(i,j,k, v(0.5,0,0))
+          density:set(i,j,k, v(outer_density,0,0))
+        else
+          iso:set(i,j,k, v(0,0,0))
+          density:set(i,j,k, v(inner_density,0,0))
+        end
+        
+        -- infill_theta
+        lt = length(v(x,y))/32.0
+        a = (atan2(y,x) / 360 + lt/6)%1.0;
+        ratios:set(i,j,k, v(a,0,0))
+      end
+    end
+  end  
+  
+  set_setting_value('phasor_infill_theta_0', ratios, bx:min_corner(), bx:max_corner())
+  set_setting_value('phasor_infill_iso_0', iso, bx:min_corner(), bx:max_corner())
+  set_setting_value('infill_percentage_0', density, bx:min_corner(), bx:max_corner())
+end
+
 --####################################################################
 
 icesl_logo = {}
@@ -222,38 +282,72 @@ key = union{
 
 --####################################################################
 
-splitting_factor = ui_number("splitting_factor", 0, 0, 50)
-
--- items to feed in the view
-items = {
-  --{shape,v(posx,posy,posz),brush}
-  {box,v(0,0,0),0},
-  {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),9},
-  {lid_top,v(0,0,box_height+splitting_factor*3),2},
-  {lock,v(0,0,(box_height-lid_height+box_wall_th)+splitting_factor*2),5},
-  {key,v(0,0,(box_height-lid_height)+splitting_factor*4),7}
+display_modes = {
+  {1, "Assembly mode"},
+  {2, "Printing mode"},
 }
+display_mode = ui_radio("Display mode",display_modes)
 
-cross_section = ui_bool("cross section view", false)
+if display_mode == 1 then
+  splitting_factor = ui_number("splitting_factor", 0, 0, 50)
+  cross_section = ui_bool("cross section view", false) 
 
-u_items = {}
-for i,item in pairs(items) do
-  u_items[i] = translate(items[i][2])*items[i][1]
-end
-u_items = union(u_items)
-
-cross_section_cut = cube(bbox(u_items):extent())
-cross_section_pos = bbox(cross_section_cut):extent().y
-
-for i,item in pairs(items) do
+  -- items to feed in the view
+  items = {
+    --{shape,v(posx,posy,posz),brush}
+    {box,v(0,0,0),0},
+    {lid_bottom,v(0,0,(box_height-lid_height)+splitting_factor),9},
+    {lid_top,v(0,0,box_height+splitting_factor*3),2},
+    {lock,v(0,0,(box_height-lid_height+box_wall_th)+splitting_factor*2),5},
+    {key,v(0,0,(box_height-lid_height)+splitting_factor*4),7}
+  } 
+    
   if cross_section then
-    out = difference{
-      translate(items[i][2])*items[i][1], -- item
-      translate(0,-cross_section_pos/2,0)*cross_section_cut -- cross section cut
-    }
-    emit(out,items[i][3])
-  else
-    out = translate(items[i][2])*items[i][1]
-    emit(out,items[i][3])
+    u_items = {}
+    for i,item in pairs(items) do
+      u_items[i] = translate(items[i][2])*items[i][1]
+    end
+    u_items = union(u_items)
+
+    cross_section_cut = cube(bbox(u_items):extent())
+    cross_section_pos = bbox(cross_section_cut):extent().y
+  end
+  
+  for i,item in pairs(items) do
+    if cross_section then
+      out = difference{
+        translate(items[i][2])*items[i][1], -- item
+        translate(0,-cross_section_pos/2,0)*cross_section_cut -- cross section cut
+      }
+      emit(out,items[i][3])
+    else
+      out = translate(items[i][2])*items[i][1]
+      emit(out,items[i][3])
+    end
+  end
+elseif display_mode == 2 then
+  items = {
+    {1,"Box body"},
+    {2,"Bottom of the lid"},
+    {3,"Top of the lid"},
+    {4,"Flexible mechanism"},
+    {5,"Key"},
+  }
+  item = ui_radio("Item to print",items)
+  if item == 1 then
+    emit(box)
+    setup_default()
+  elseif item == 2 then
+    emit(lid_bottom)
+    setup_default()
+  elseif item == 3 then
+    emit(rotate(180,0,0)*lid_top)
+    setup_default()
+  elseif item == 4 then
+    emit(lock)
+    setup_phasor(lock)
+  elseif item == 5 then
+    emit(rotate(180,0,0)*key)
+    setup_default()
   end
 end
