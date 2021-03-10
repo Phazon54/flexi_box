@@ -65,6 +65,9 @@ function setup_phasor(lock_shape)
   local inner_density = 0.25
   local outer_density = 0.35
 
+  local inner_iso = 0.0
+  local outer_iso = 0.5
+
   local bx = bbox(lock_shape)
   -- Allocate the field as a 3D texture
   local ratios = tex3d_rgb8f(64,64,64)
@@ -87,10 +90,10 @@ function setup_phasor(lock_shape)
         
         -- apply infill_isotropy & infill_percentage
         if l>z then
-          iso:set(i,j,k, v(0.5,0,0))
+          iso:set(i,j,k, v(outer_iso,0,0))
           density:set(i,j,k, v(outer_density,0,0))
         else
-          iso:set(i,j,k, v(0,0,0))
+          iso:set(i,j,k, v(inner_iso,0,0))
           density:set(i,j,k, v(inner_density,0,0))
         end
         
@@ -108,18 +111,37 @@ function setup_phasor(lock_shape)
 end
 
 --####################################################################
+box_side_length = get_polygon_side(box_nb_faces,box_diameter)
 
 icesl_logo = {}
 for _, contour in pairs(svg_logo) do
   icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),contour:outline())
 end
-icesl_logo = rotate(-90,0,0)*scale(1.6,1.6,1)*union(icesl_logo)
+icesl_logo = rotate(-90,0,0)*union(icesl_logo)
+
+logo = place_on_polygon(
+  box_nb_faces,
+  box_diameter,
+  1, 
+  0, 
+  translate(-(box_side_length/2)+(bbox(icesl_logo):extent().x),0,(bbox(icesl_logo):extent().z)+(box_height-lid_height-box_wall_th*3)/4)*icesl_logo, 
+  -box_wall_th/2
+)
 
 icesl_qrcode = {}
 for contour=2,#svg_qrcode do
   icesl_qrcode[#icesl_qrcode+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),svg_qrcode[contour]:outline())
 end
-icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
+icesl_qrcode = rotate(-90,0,0)*scale(0.7,0.7,1)*union(icesl_qrcode)
+
+qrcode = place_on_polygon(
+  box_nb_faces,
+  box_diameter,
+  1, 
+  3, 
+  translate(-(box_side_length/2)+(bbox(icesl_qrcode):extent().x)/2,0,(bbox(icesl_qrcode):extent().z)+(box_height-lid_height-box_wall_th*2)/4)*icesl_qrcode, 
+  -box_wall_th/2
+)
 
 -- chamfers
 box_corner_chamfer = place_on_all(
@@ -129,8 +151,6 @@ box_corner_chamfer = place_on_all(
   cube(box_wall_th*2,box_wall_th*2,box_height),
   -box_wall_th/2
 )
-
-box_side_length = get_polygon_side(box_nb_faces,box_diameter)
 
 box_edge_chamfer = place_on_all(
   box_nb_faces,
@@ -247,6 +267,19 @@ lid_top = difference{
   translate(0,0,-box_wall_th)*lid_vents, -- lid 'vents'
 }
 
+-- box indents
+indent_out = v(box_side_length-box_wall_th*4,box_height-lid_height-box_wall_th)
+indent_in = v(indent_out.x-box_wall_th*2, indent_out.y - box_wall_th*2)
+indent = gen_flat_pyramid(indent_out, indent_in, box_wall_th/2)
+
+indents = place_on_all(
+  box_nb_faces,
+  box_diameter,
+  1,
+  translate(0,0,(indent_out.y/2)+box_wall_th)*rotate(-90,0,0)*indent,
+  -box_wall_th/2
+)
+
 -- box
 box = difference{
   gen_polygon(box_nb_faces,box_diameter,box_height),
@@ -254,7 +287,14 @@ box = difference{
   translate(0,0,box_height-lid_height-box_wall_th)*gen_polygon(box_nb_faces,box_diameter-box_wall_th*4,lid_height+box_wall_th),
   translate(0,0,-box_wall_th/1.5)*box_edge_chamfer, -- edges chamfer
   box_corner_chamfer, -- corner chamfer
-  translate(0,0,box_height-box_wall_th*3)*box_peg_holes-- locking pegs holes
+  translate(0,0,box_height-box_wall_th*3)*box_peg_holes,-- locking pegs holes
+  indents, -- cosmetic indents
+}
+
+box = union{
+  box,  
+  logo, -- icesl logo
+  qrcode, -- icesl qrcode
 }
 
 -- locking 'mechanism'

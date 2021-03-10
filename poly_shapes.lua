@@ -78,3 +78,42 @@ function gen_trapeze(base1, base2, height, thickness)
 
 	return linear_extrude(v(0,0,thickness),trapeze)
 end
+
+-- truncated rectangle or square-based pyramid
+-- to have a rectangular base, baseX should be a vector with its dimensions
+-- (ie base1 = 10 for a square base, base1 = v(10,20) for a rectangle)
+function gen_flat_pyramid(base1, base2, height)
+	local base1_x, base1_y, base2_x, base2_y
+	if type(base1) == "number" then
+		base1_x = base1
+		base1_y = base1
+	else
+		base1_x = base1.x
+		base1_y = base1.y
+	end
+
+	if type(base2) == "number" then
+		base2_x = base2
+		base2_y = base2
+	else
+		base2_x = base2.x
+		base2_y = base2.y
+	end
+
+	local pyramid = {
+		{-- base1
+			v(-base1_x/2,-base1_y/2,0),
+			v(base1_x/2,-base1_y/2,0),
+			v(base1_x/2,base1_y/2,0),
+			v(-base1_x/2,base1_y/2,0),
+		}, 
+		{-- base2
+			v(-base2_x/2,-base2_y/2,height),
+			v(base2_x/2,-base2_y/2,height),
+			v(base2_x/2,base2_y/2,height),
+			v(-base2_x/2,base2_y/2,height),
+		},
+	}
+
+	return sections_extrude(pyramid)
+end
