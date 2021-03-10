@@ -186,7 +186,7 @@ lid_peg_holes = place_on_all(
 )
 
 -- lid 'vents'
-lid_vents = place_on_all(
+lid_vents = place_on_all( -- TODO : rework base shape dimension to accomodate all types of n-gons box (currently on works for hexagonal box)
   box_nb_faces,
   box_diameter,
   1,
@@ -300,7 +300,7 @@ locking_pegs = place_on_all(
   -box_wall_th*6
 )
 
-lock = difference{
+lock = difference{ -- TODO: rework to not rely on box_wall_th ! (doesn't work if the box is resized !)
   union{
     cylinder((box_diameter/2)-(box_wall_th*8),(lid_height-box_wall_th*2)-lid_clearance),-- body
     locking_pegs,
@@ -377,6 +377,7 @@ elseif display_mode == 2 then
     {5,"Key"},
   }
   item = ui_radio("Item to print",items)
+  --item = 4
   if item == 1 then
     emit(box)
     setup_default()
