@@ -291,12 +291,6 @@ box = difference{
   indents, -- cosmetic indents
 }
 
-box = union{
-  box,  
-  logo, -- icesl logo
-  qrcode, -- icesl qrcode
-}
-
 -- locking 'mechanism'
 locking_pegs = place_on_all(
   box_nb_faces,
@@ -322,6 +316,15 @@ key = union{
 
 --####################################################################
 
+use_logo_and_qrcode = ui_bool("Use IceSL's logo and QRcode?", true)
+if use_logo_and_qrcode then 
+  box = union{
+    box,  
+    logo, -- icesl logo
+    qrcode, -- icesl qrcode
+  }
+end
+
 display_modes = {
   {1, "Assembly mode"},
   {2, "Printing mode"},
@@ -329,8 +332,8 @@ display_modes = {
 display_mode = ui_radio("Display mode",display_modes)
 
 if display_mode == 1 then
-  splitting_factor = ui_number("splitting_factor", 0, 0, 50)
-  cross_section = ui_bool("cross section view", false) 
+  splitting_factor = ui_number("Splitting_factor", 0, 0, 50)
+  cross_section = ui_bool("Cross section view", false) 
 
   -- items to feed in the view
   items = {
