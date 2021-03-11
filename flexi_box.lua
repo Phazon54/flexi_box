@@ -34,7 +34,7 @@ screw_thread_diameter = 2.5
 
 screw_head_bridging = 0.2 -- layer height !
 
-embossing_depth = 2
+relief = 0.7
 
 --####################################################################
 
@@ -113,12 +113,17 @@ end
 
 --####################################################################
 box_side_length = get_polygon_side(box_nb_faces,box_diameter)
+indent_out = v(box_side_length-box_wall_th*4,box_height-lid_height-box_wall_th)
+indent_in = v(indent_out.x-box_wall_th*2, indent_out.y - box_wall_th*2)
 
 icesl_logo = {}
 for _, contour in pairs(svg_logo) do
-  icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),contour:outline())
+  icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,relief),contour:outline())
 end
 icesl_logo = rotate(-90,0,0)*union(icesl_logo)
+
+logo_to_box = (indent_in.y - box_wall_th*2) / bbox(icesl_logo):extent().z
+icesl_logo = scale(logo_to_box,1,logo_to_box)*icesl_logo
 
 logo = place_on_polygon(
   box_nb_faces,
@@ -131,16 +136,19 @@ logo = place_on_polygon(
 
 icesl_qrcode = {}
 for contour=2,#svg_qrcode do
-  icesl_qrcode[#icesl_qrcode+1] = linear_extrude_from_oriented(v(0,0,embossing_depth),svg_qrcode[contour]:outline())
+  icesl_qrcode[#icesl_qrcode+1] = linear_extrude_from_oriented(v(0,0,relief),svg_qrcode[contour]:outline())
 end
-icesl_qrcode = rotate(-90,0,0)*scale(0.7,0.7,1)*union(icesl_qrcode)
+icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
+
+qrcode_to_box = (indent_in.y - box_wall_th*2) / bbox(icesl_qrcode):extent().z
+icesl_qrcode = scale(qrcode_to_box,1,qrcode_to_box)*icesl_qrcode
 
 qrcode = place_on_polygon(
   box_nb_faces,
   box_diameter,
   1, 
   3, 
-  translate(-(box_side_length/2)+(bbox(icesl_qrcode):extent().x)/2,0,(bbox(icesl_qrcode):extent().z)+(box_height-lid_height-box_wall_th*2)/4)*icesl_qrcode, 
+  translate(-(box_side_length/2)+(bbox(icesl_qrcode):extent().x/2.6),0,(bbox(icesl_qrcode):extent().z)+(box_height-lid_height-box_wall_th*2)/4)*icesl_qrcode, 
   -box_wall_th/2
 )
 
@@ -269,8 +277,6 @@ lid_top = difference{
 }
 
 -- box indents
-indent_out = v(box_side_length-box_wall_th*4,box_height-lid_height-box_wall_th)
-indent_in = v(indent_out.x-box_wall_th*2, indent_out.y - box_wall_th*2)
 indent = gen_flat_pyramid(indent_out, indent_in, box_wall_th/2)
 
 indents = place_on_all(
