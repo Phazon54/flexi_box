@@ -81,7 +81,8 @@ function setup_phasor(lock_shape)
         y = j - 33
         z = k / 64
         -- defining borders
-        l = (length(v(x,y))/32.0 - 1/6) / (11/12)
+        --l = (length(v(x,y))/32.0 - 1/6) / (11/12)
+        l = (length(v(x,y))/32.0 - 1/16) / (7/8)
         
         -- defining an horizontal V shape for the fields
         z = math.abs(0.5-z) * 2.0
@@ -377,7 +378,6 @@ elseif display_mode == 2 then
     {5,"Key"},
   }
   item = ui_radio("Item to print",items)
-  --item = 4
   if item == 1 then
     emit(box)
     setup_default()
@@ -388,7 +388,7 @@ elseif display_mode == 2 then
     emit(rotate(180,0,0)*lid_top)
     setup_default()
   elseif item == 4 then
-    emit(lock)
+    emit(translate(box_wall_th*0.8,box_wall_th*0.8,0)*lock) -- dirty way to compensate the infill field offset
     setup_phasor(lock)
   elseif item == 5 then
     emit(rotate(180,0,0)*key)
