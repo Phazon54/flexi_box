@@ -303,14 +303,14 @@ locking_pegs = place_on_all(
   box_nb_faces,
   box_diameter,
   1,
-  cube(box_side_length/4,box_wall_th*6,(lid_height-box_wall_th*2)-lid_clearance),
-  -box_wall_th*6
+  rotate(0,0,-60)*cube(box_side_length/4,box_side_length/2,(lid_height-box_wall_th*2)-lid_clearance),
+  -box_wall_th*9
 )
 
 lock = difference{ -- TODO: rework to not rely on box_wall_th ! (doesn't work if the box is resized !)
   union{
     cylinder((box_diameter/2)-(box_wall_th*8),(lid_height-box_wall_th*2)-lid_clearance),-- body
-    locking_pegs,
+    rotate(0,0,30)*locking_pegs,
   },
   gen_polygon(key_nb_faces,key_diameter+lid_clearance,(lid_height-box_wall_th*2)-lid_clearance),-- keyhole
 }
@@ -337,6 +337,7 @@ display_modes = {
   {2, "Printing mode"},
 }
 display_mode = ui_radio("Display mode",display_modes)
+--display_mode = 2
 
 if display_mode == 1 then
   splitting_factor = ui_number("Splitting_factor", 0, 0, 50)
@@ -384,6 +385,7 @@ elseif display_mode == 2 then
     {5,"Key"},
   }
   item = ui_radio("Item to print",items)
+  --item = 4
   if item == 1 then
     emit(box)
     setup_default()
@@ -395,7 +397,7 @@ elseif display_mode == 2 then
     setup_default()
   elseif item == 4 then
     emit(translate(box_wall_th*0.8,box_wall_th*0.8,0)*lock) -- dirty way to compensate the infill field offset
-    setup_phasor(lock)
+    --setup_phasor(lock)
   elseif item == 5 then
     emit(rotate(180,0,0)*key)
     setup_default()
