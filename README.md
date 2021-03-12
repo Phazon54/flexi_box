@@ -24,7 +24,7 @@ The collapsing of the structures in the center pulls the locking pegs inside the
 
 ## IceSL?
 
-IceSL is a slicer and modeler created by the MFX team from INRIA Nancy. Among many other features, it implements a powerfull scripting interface, allowing to create models, and to fine tune every printing setting to fit any needs.
+IceSL is a **slicer and modeler** created by the MFX team from INRIA Nancy. Among many other features, it implements a powerfull scripting interface, allowing to create models, and to fine tune every printing setting to fit any needs.
 Being the product of the team's research, it is also the home of the implementation of the latest findings in optimisations and slicing techniques.
 
 To learn more about the team and its previous work, checkout [the team's website](https://mfx.loria.fr/)
@@ -42,7 +42,7 @@ To learn more about the technique behind Phasor, checkout the parent publication
 
 ## Recommended printer(s) and settings
 
-You can print this box on any printer. However, the internal mechanism should be printer in flexible filament (TPU-85A) to work properly.
+You can print this box on any printer. However, the internal mechanism should be printed in flexible filament (TPU-85A) to work properly.
 
 To print it properly, I would suggest these settings and hardware:
 - a printer with a dual-gear extruder and with a small motor-to-nozzle distance (E3D's Hemera is perfect for this task !)
@@ -54,6 +54,8 @@ The other settings will be automatically set by the provided script!
 ## Acknowledgments
 
 Inspired by the amazing "Expanding Mechanism Lock Box" from Maker's Muse ( [youtube video](https://www.youtube.com/watch?v=LU77kPf25Yg) | [website](https://www.makersmuse.com/expanding-lock-box) )
+
+Prototype parts were printed in PLA on an **Original Prusa MK2S** (for the solid parts), and in NinjaTek's NinjaFlex 85A on a **CR10S Pro retroffited with a E3D Hemera** (for the flexible mechanism).
 
 
 [box_pic]: assets/split_view.png
