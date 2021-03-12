@@ -5,23 +5,25 @@ This 3D-printable box is modeled to have its internal mechanism printed in flexi
 ![splited view of the box][box_pic]
 
 ## How is this working?
-The internal mechanism is designed with the intent to use the (soon to be) new infiller in IceSL: Phasor.
-By using the scripting language to apply a varying isotropy, infill angle and infill density, we can generate a complex microstructure which will deform and contract itself if we rotate its center using a key or a screw. 
+
+The internal mechanism is designed with the intent to use the (soon to be released) new infiller in IceSL: Phasor.
+By using the scripting language to apply a spatially varying isotropy, infill angle and infill density, we generate a complex microstructure which deforms and contracts itself when we rotate its center using a key or a screw. 
 
 ![infill angle applied to the locking mechanism][angle_field]
-The affectation of the infill angle.
+The control field of the infill angle.
 
 ![infill isotropry applied to the locking mechanism][iso_field]
-The affectation of the isotropy and the infill density.The gray parts will be denser and with more isotropy, the blue part will be less dense and with les isotropy.
+The control field of the isotropy and infill density. The gray parts will be denser and with more isotropy, the blue part will be less dense and with less isotropy.
 
 ![locking mechanism sliced with Phasor][sliced]
 The sliced structure.
 
-This centered collapsing of the structure should pull the locking pegs inside the lid, thus opening the box.
+The collapsing of the structures in the center pulls the locking pegs inside the lid, thus opening the box.
 ![resting locking mechanism][resting_lock]
 ![opening locking mechanism][opening_lock]
 
 ## IceSL?
+
 IceSL is a slicer and modeler created by the MFX team from INRIA Nancy. Among many other features, it implements a powerfull scripting interface, allowing to create models, and to fine tune every printing setting to fit any needs.
 Being the product of the team's research, it is also the home of the implementation of the latest findings in optimisations and slicing techniques.
 
@@ -30,7 +32,8 @@ To learn more about the team and its previous work, checkout [the team's website
 To learn more about IceSL, checkout its [website](https://icesl.loria.fr)
 
 ## Phasor? 
-The Phasor infill is a novelty infiller which aims to help produce freely orientable microstructures for designing deformable 3D prints.
+
+The Phasor infill is a novel infiller which produces freely orientable microstructures, to help design deformable 3D prints.
 Being the implementation of a recent publication, **it will be available in the next IceSL's update**!
 
 To learn more about the technique behind Phasor, checkout the parent publication:
@@ -38,15 +41,18 @@ To learn more about the technique behind Phasor, checkout the parent publication
 [Thibault Tricard, Vincent Tavernier, Cédric Zanni, Jonàs Martínez, Pierre-Alexandre Hugron, et al..Freely orientable microstructures for designing deformable 3D prints. ACM Transactions on Graphics,Association for Computing Machinery, In press, 10.1145/3414685.3417790. hal-02524371v3](https://hal.inria.fr/hal-02524371)
 
 ## Recommended printer(s) and settings
-You can print this box on any printer however, the internal mechanism should be printer in flexible filament (TPU-85A) to work properly.
-To print it properly, I would suggest theses settings and hardware:
+
+You can print this box on any printer. However, the internal mechanism should be printer in flexible filament (TPU-85A) to work properly.
+
+To print it properly, I would suggest these settings and hardware:
 - a printer with a dual-gear extruder and with a small motor-to-nozzle distance (E3D's Hemera is perfect for this task !)
 - no retraction
-- a flow and speed multiplier properly tuned (in the models provided with IceSL, the file testing_tools/flow_test.lua can allow you to test quickliy different values for theses settings)
+- a flow and speed multiplier properly tuned (in the example scripts provided with IceSL, the file [testing_tools/flow_test.lua](https://github.com/shapeforge/icesl-models/blob/master/testing_tools/flow_test.lua) can help you test quickly different values for these settings).
 
-The other settings should be already prepared in the provided script!
+The other settings will be automatically set by the provided script!
 
 ## Acknowledgments
+
 Inspired by the amazing "Expanding Mechanism Lock Box" from Maker's Muse ( [youtube video](https://www.youtube.com/watch?v=LU77kPf25Yg) | [website](https://www.makersmuse.com/expanding-lock-box) )
 
 
