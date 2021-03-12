@@ -12,19 +12,25 @@
 -- by themselves when twisting the "key" rod
 
 box_nb_faces = 6
-box_diameter = 200
-box_height = 100
+box_diameter = 100
+box_height = 50
 
-box_wall_th = 5
+box_wall_th = 2.5
 
-lid_height = 20
+lid_height = 10
 lid_clearance = 0.4
 
-key_hole_diameter = 30
-key_nb_faces = 6
-key_diameter = 25
-key_length = 50
-key_cross_length = 75
+use_key = false
+if use_key then
+  key_diameter = 12 
+  key_nb_faces = 6
+  key_length = 25
+  key_cross_length = 38
+else
+  key_diameter = 6 -- m6 screw
+end
+
+key_hole_diameter = key_diameter*1.2
 
 -- m3 screws
 screw_diameter = 3
@@ -49,18 +55,29 @@ svg_qrcode = svg_contouring(Path .. 'assets/qrcode.svg',90)
 
 function setup_default()
   --set_setting_value('infill_type_0', 'Default');
-  set_setting_value('infill_type_0', 'Gyroid');
-  set_setting_value('num_shells_0', 2);
-  set_setting_value('cover_thickness_mm_0', 2);
-  set_setting_value('print_perimeter_0', true);
-  set_setting_value('infill_percentage_0', 20);
+  set_setting_value('infill_type_0', 'Gyroid')
+  set_setting_value('num_shells_0', 2)
+  set_setting_value('cover_thickness_mm_0', 2)
+  set_setting_value('print_perimeter_0', true)
+  set_setting_value('infill_percentage_0', 20)
 end
 
 function setup_phasor(lock_shape)
-  set_setting_value('infill_type_0', 'Phasor');
-  set_setting_value('num_shells_0', 0);
-  set_setting_value('cover_thickness_mm_0', 0);
-  set_setting_value('print_perimeter_0', false);
+  set_setting_value('printer', 'CR10S_Pro')
+  set_setting_value('infill_type_0', 'Phasor')
+  set_setting_value('num_shells_0', 0)
+  set_setting_value('cover_thickness_mm_0', 0)
+  set_setting_value('print_perimeter_0', false)
+
+  set_setting_value('filament_priming_mm_0',0.0)
+  set_setting_value('flow_multiplier_0',1.35)
+  set_setting_value('speed_multiplier_0',1.35)
+
+  set_setting_value('extruder_temp_degree_c_0',240.0)
+  set_setting_value('bed_temp_degree_c',50.0)
+
+  set_setting_value('print_speed_mm_per_sec',35.0)
+  set_setting_value('first_layer_print_speed_mm_per_sec',20.0)
 
   local inner_density = 0.25
   local outer_density = 0.35
@@ -182,7 +199,7 @@ box_peg_holes = place_on_all(
   box_nb_faces,
   box_diameter,
   1,
-  cube(box_side_length/4,box_wall_th*2,lid_height-box_wall_th*2),
+  translate(box_side_length/6,0,0)*cube(box_side_length/4,box_wall_th*2,lid_height-box_wall_th*2),
   -box_wall_th*2
 )
 
@@ -190,7 +207,7 @@ lid_peg_holes = place_on_all(
   box_nb_faces,
   box_diameter-box_wall_th*4,
   1,
-  cube(box_side_length/4,box_wall_th,lid_height-box_wall_th*2),
+  translate(box_side_length/6,0,0)*cube(box_side_length/4,box_wall_th,lid_height-box_wall_th*2),
   -box_wall_th
 )
 
@@ -302,24 +319,34 @@ box = difference{
 locking_pegs = place_on_all(
   box_nb_faces,
   box_diameter,
-  1,
-  rotate(0,0,-60)*cube(box_side_length/4,box_side_length/2,(lid_height-box_wall_th*2)-lid_clearance),
-  -box_wall_th*9
+  0,
+  translate(-20,0,0)*rotate(0,0,-60)*cube(box_side_length/4,box_side_length/2,(lid_height-box_wall_th*2)-lid_clearance),
+  -box_wall_th*12
 )
+
+if use_key then
+  key_footprint = gen_polygon(key_nb_faces,key_diameter+lid_clearance,(lid_height-box_wall_th*2)-lid_clearance)-- keyhole
+else
+  key_footprint = cylinder(key_diameter/2+lid_clearance,(lid_height-box_wall_th*2)-lid_clearance)-- screw hole
+end
 
 lock = difference{ -- TODO: rework to not rely on box_wall_th ! (doesn't work if the box is resized !)
   union{
     cylinder((box_diameter/2)-(box_wall_th*8),(lid_height-box_wall_th*2)-lid_clearance),-- body
-    rotate(0,0,30)*locking_pegs,
+    locking_pegs,
   },
-  gen_polygon(key_nb_faces,key_diameter+lid_clearance,(lid_height-box_wall_th*2)-lid_clearance),-- keyhole
+  key_footprint  
 }
 
 -- key
-key = union{
-  gen_polygon(key_nb_faces,key_diameter,key_length),
-  translate(0,0,key_length)*cube(key_cross_length,key_diameter,key_diameter/2)
-}
+if use_key then
+  key = union{
+    gen_polygon(key_nb_faces,key_diameter,key_length),
+    translate(0,0,key_length)*cube(key_cross_length,key_diameter,key_diameter/2)
+  }
+else
+  key = cube(0)
+end
 
 --####################################################################
 
@@ -397,7 +424,7 @@ elseif display_mode == 2 then
     setup_default()
   elseif item == 4 then
     emit(translate(box_wall_th*0.8,box_wall_th*0.8,0)*lock) -- dirty way to compensate the infill field offset
-    --setup_phasor(lock)
+    setup_phasor(lock)
   elseif item == 5 then
     emit(rotate(180,0,0)*key)
     setup_default()
