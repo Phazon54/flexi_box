@@ -41,26 +41,27 @@ relief = 0.7
 -- Basic polygons "lib" import
 dofile(Path .. 'poly_shapes.lua')
 
--- Assets
-svg_logo = svg_contouring(Path .. 'assets/logo.svg',90)
-svg_qrcode = svg_contouring(Path .. 'assets/qrcode.svg',90)
+-- Assets management lib
+dofile(Path .. 'assets.lua')
+svg_logo = prepare_svg(Path .. 'assets/logo.svg')
+svg_qrcode = prepare_svg(Path .. 'assets/qrcode.svg')
 
 --####################################################################
 
 function setup_default()
   --set_setting_value('infill_type_0', 'Default');
-  set_setting_value('infill_type_0', 'Gyroid');
-  set_setting_value('num_shells_0', 2);
-  set_setting_value('cover_thickness_mm_0', 2);
-  set_setting_value('print_perimeter_0', true);
-  set_setting_value('infill_percentage_0', 20);
+  set_setting_value('infill_type_0', 'Gyroid')
+  set_setting_value('num_shells_0', 2)
+  set_setting_value('cover_thickness_mm_0', 2)
+  set_setting_value('print_perimeter_0', true)
+  set_setting_value('infill_percentage_0', 20)
 end
 
 function setup_phasor(lock_shape)
-  set_setting_value('infill_type_0', 'Phasor');
-  set_setting_value('num_shells_0', 0);
-  set_setting_value('cover_thickness_mm_0', 0);
-  set_setting_value('print_perimeter_0', false);
+  set_setting_value('infill_type_0', 'Phasor')
+  set_setting_value('num_shells_0', 0)
+  set_setting_value('cover_thickness_mm_0', 0)
+  set_setting_value('print_perimeter_0', false)
 
   local inner_density = 0.25
   local outer_density = 0.35
@@ -116,13 +117,11 @@ box_side_length = get_polygon_side(box_nb_faces,box_diameter)
 indent_out = v(box_side_length-box_wall_th*4,box_height-lid_height-box_wall_th)
 indent_in = v(indent_out.x-box_wall_th*2, indent_out.y - box_wall_th*2)
 
-icesl_logo = {}
-for _, contour in pairs(svg_logo) do
-  icesl_logo[#icesl_logo+1] = linear_extrude_from_oriented(v(0,0,relief),contour:outline())
-end
-icesl_logo = rotate(-90,0,0)*union(icesl_logo)
+-- logo
+icesl_logo = rotate(-90,0,0)*contour_to_mesh(svg_logo,1,relief)
+icesl_logo_bx = bbox(icesl_logo)
 
-logo_to_box = (indent_in.y - box_wall_th*2) / bbox(icesl_logo):extent().z
+logo_to_box = (indent_in.y - box_wall_th*2) / icesl_logo_bx:extent().z
 icesl_logo = scale(logo_to_box,1,logo_to_box)*icesl_logo
 
 logo = place_on_polygon(
@@ -130,17 +129,15 @@ logo = place_on_polygon(
   box_diameter,
   1, 
   0, 
-  translate(-(box_side_length/2)+(bbox(icesl_logo):extent().x),0,(bbox(icesl_logo):extent().z)+(box_height-lid_height-box_wall_th*3)/4)*icesl_logo, 
+  translate(-(box_side_length/2)+(icesl_logo_bx:extent().x),0,(icesl_logo_bx:extent().z)+(box_height-lid_height-box_wall_th*3)/4)*icesl_logo, 
   -box_wall_th/2
 )
 
-icesl_qrcode = {}
-for contour=2,#svg_qrcode do
-  icesl_qrcode[#icesl_qrcode+1] = linear_extrude_from_oriented(v(0,0,relief),svg_qrcode[contour]:outline())
-end
-icesl_qrcode = rotate(-90,0,0)*union(icesl_qrcode)
+-- qrcode
+icesl_qrcode = rotate(-90,0,0)*contour_to_mesh(svg_qrcode,2,relief) -- ignore the 1st countour (qrcode border)
+icesl_qrcode_bx = bbox(icesl_qrcode)
 
-qrcode_to_box = (indent_in.y - box_wall_th*2) / bbox(icesl_qrcode):extent().z
+qrcode_to_box = (indent_in.y - box_wall_th*2) / icesl_qrcode_bx:extent().z
 icesl_qrcode = scale(qrcode_to_box,1,qrcode_to_box)*icesl_qrcode
 
 qrcode = place_on_polygon(
@@ -148,7 +145,7 @@ qrcode = place_on_polygon(
   box_diameter,
   1, 
   3, 
-  translate(-(box_side_length/2)+(bbox(icesl_qrcode):extent().x/2.6),0,(bbox(icesl_qrcode):extent().z)+(box_height-lid_height-box_wall_th*2)/4)*icesl_qrcode, 
+  translate(-(box_side_length/2)+(icesl_qrcode_bx:extent().x/3.4),0,(icesl_qrcode_bx:extent().z)*1.05)*icesl_qrcode, 
   -box_wall_th/2
 )
 
