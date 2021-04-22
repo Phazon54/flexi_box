@@ -34,7 +34,8 @@ To learn more about IceSL, checkout its [website](https://icesl.loria.fr)
 ## Phasor? 
 
 The Phasor infill is a novel infiller which produces freely orientable microstructures, to help design deformable 3D prints.
-Being the implementation of a recent publication, **it will be available in the next IceSL's update**!
+~~Being the implementation of a recent publication, **it will be available in the next IceSL's update**!~~ 
+**It is now available in IceSL's new version !**
 
 To learn more about the technique behind Phasor, checkout the parent publication:
 
